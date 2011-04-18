@@ -11,6 +11,8 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -43,11 +45,26 @@ public class main extends Activity {
 			}else{
 				edit.setText(settings.getString("download", "not"));
 			}
-			if (settings.getBoolean("auto", false)){
+			if (!settings.contains("auto")){
 				check.setChecked(true);
 			}else{
-				check.setChecked(false);
+				if (settings.getBoolean("auto", false)){
+					check.setChecked(true);
+				}else{
+					check.setChecked(false);
+				}
 			}
+			final ShellCommand cmd = new ShellCommand();
+			check.setOnCheckedChangeListener(new OnCheckedChangeListener()
+			{
+			    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked)
+			    {
+			        if ( isChecked )
+			        {
+			           cmd.canSU();
+			        }
+			    }
+			});
 			button.setOnClickListener(new OnClickListener() {
 				@Override
 				public void onClick(View v) {
@@ -56,6 +73,8 @@ public class main extends Activity {
 					editor.putString("download",edit.getText().toString());
 					editor.putBoolean("auto", check.isChecked());
 					editor.commit();
+					if (check.isChecked())
+						cmd.canSU();
 					finish();
 					showToast("Preference Saved");
 				}

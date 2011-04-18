@@ -101,7 +101,7 @@ public class LocalService extends Service {
 		};
 		fdownload.run();
 		notificationManager.cancel(1010);
-		if (settings.getBoolean("auto", false)){
+		if (settings.getBoolean("auto", false) || (!settings.contains("auto"))){
 			ShellCommand command = new ShellCommand();
 			if (command.canSU()){
 				File down = new File(download+"/"+filename);
@@ -146,10 +146,10 @@ public class LocalService extends Service {
 				intent.setDataAndType(Uri.fromFile(down), "application/vnd.android.package-archive");
 				intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 				NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-				Notification notification1 = new Notification(R.drawable.icon, "App Installed", System.currentTimeMillis());
+				Notification notification1 = new Notification(R.drawable.icon, "Download Completed", System.currentTimeMillis());
 				notification1.flags = Notification.FLAG_AUTO_CANCEL;
 				PendingIntent contentIntent = PendingIntent.getActivity(this, 1014, intent, 0);
-				notification1.setLatestEventInfo(this, "App Installed", "Tap to install", contentIntent);
+				notification1.setLatestEventInfo(this, "Download Completed", "Tap to install", contentIntent);
 				manager.notify(1014, notification1);
 			}else{
 				displayNotification(1013,"App Not Downloaded","Unsuccessful");
