@@ -17,6 +17,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 public class main extends Activity {
+	Dialog dialog;
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -34,7 +35,7 @@ public class main extends Activity {
 			final Dialog dialog = new Dialog(main.this);
 			dialog.setContentView(R.layout.dialog);
 			dialog.setTitle("            InterceptUrl");
-			dialog.setCancelable(true);
+			dialog.setCancelable(false);
 			Button button = (Button) dialog.findViewById(R.id.Accept);
 			Button button2 = (Button) dialog.findViewById(R.id.Cancel);
 			final CheckBox check = (CheckBox) dialog.findViewById(R.id.auto);
@@ -75,15 +76,16 @@ public class main extends Activity {
 					editor.commit();
 					if (check.isChecked())
 						cmd.canSU();
-					finish();
 					showToast("Preference Saved");
+					dialog.dismiss();
+					finish();
 				}
 			});
 			button2.setOnClickListener(new OnClickListener() {
 				@Override
 				public void onClick(View v) {
 					showToast("Preferences Not Saved"); 
-					dialog.cancel();
+					dialog.dismiss();
 					finish();
 				}
 			}); 
@@ -98,10 +100,7 @@ public class main extends Activity {
 			finish();
 		}
 	}
-	public void onBackPressed() {
-		android.os.Process.killProcess(android.os.Process.myPid());
-		return;
-	}
+
 	public void showToast(String msg) {
 		Toast error = Toast.makeText(this, msg, Toast.LENGTH_LONG);
 		error.show();
