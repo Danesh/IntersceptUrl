@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="wrap_content" android:layout_height="wrap_content"
+	android:orientation="vertical">
+	<TextView android:text="Enter Path"
+		android:layout_width="wrap_content" android:layout_height="wrap_content" />
+	<EditText android:id="@+id/text" android:layout_width="fill_parent"
+		android:layout_height="wrap_content" />
+	<LinearLayout android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:orientation="horizontal">
+		<Button android:id="@+id/Accept" android:layout_width="fill_parent"
+			android:layout_height="wrap_content" android:text="Save" />
+		<CheckBox android:id="@+id/auto" android:layout_width="fill_parent"
+			android:paddingRight="5.0dip" android:layout_height="wrap_content" android:text="Auto-Install" />
+		<Button android:id="@+id/Cancel" android:layout_width="fill_parent"
+			android:layout_height="wrap_content" android:text="Cancel" />
+	</LinearLayout>
+</LinearLayout>

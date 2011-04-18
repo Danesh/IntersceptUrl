@@ -6,13 +6,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.IBinder;
 import android.widget.Toast;
@@ -95,26 +100,71 @@ public class LocalService extends Service {
 			}
 		};
 		fdownload.run();
-		NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-		Notification notification1 = new Notification(R.drawable.icon, "Download Completed", System.currentTimeMillis());
-		PendingIntent contentIntent = PendingIntent.getActivity(this, 1011, new Intent(this, LocalService.class), 0);
-		notification1.setLatestEventInfo(this, "Title here", ".. And here's some more details..", contentIntent);
-		manager.notify(1011, notification1);
-		notificationManager.cancelAll();
-		ShellCommand command = new ShellCommand();
-		if (command.canSU()){
-			command.su.runWaitFor("pm install "+download+"/"+filename);
-			//showToast("File was installed");
+		notificationManager.cancel(1010);
+		if (settings.getBoolean("auto", false)){
+			ShellCommand command = new ShellCommand();
+			if (command.canSU()){
+				File down = new File(download+"/"+filename);
+				if (down.exists()){
+					PackageManager packageManager = getPackageManager();
+					PackageInfo p = packageManager.getPackageArchiveInfo(download+"/"+filename, 0);
+					if (p==null){
+						displayNotification(1012,"Install Unsuccessfull","Error Parsing");
+					}else{
+						p.applicationInfo.sourceDir=download+"/"+filename;
+						p.applicationInfo.publicSourceDir=download+"/"+filename;
+						command.su.runWaitFor("pm install -r "+download+"/"+filename);
+						Intent mIntent = getPackageManager().getLaunchIntentForPackage(p.packageName);
+						if (mIntent != null) {
+							try {
+								NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+								Notification notification1 = new Notification(R.drawable.icon, "App Installed", System.currentTimeMillis());
+								notification1.flags = Notification.FLAG_AUTO_CANCEL;
+								PendingIntent contentIntent = PendingIntent.getActivity(this, 1014, mIntent, 0);
+								notification1.setLatestEventInfo(this, "App Installed", packageManager.getApplicationLabel(p.applicationInfo).toString(), contentIntent);
+								manager.notify(1014, notification1);
+							} catch (ActivityNotFoundException err) {
+								displayNotification(1012,"Install Unsuccessfull","Error Parsing");
+							}
+						}else{
+							displayNotification(1012,"Install Unsuccessfull","Error Parsing");
+						}
+					}
+				}else{
+					displayNotification(1011,"Download Unsuccessful","Error");
+				}
+			}else{
+				Intent intent = new Intent(Intent.ACTION_VIEW);
+				intent.setDataAndType(Uri.fromFile(new File(download+"/"+filename)), "application/vnd.android.package-archive");
+				intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				startActivity(intent);
+			}
 		}else{
-			Intent intent = new Intent(Intent.ACTION_VIEW);
-			intent.setDataAndType(Uri.fromFile(new File(download+"/"+filename)), "application/vnd.android.package-archive");
-			intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-			startActivity(intent);
+			File down = new File(download+"/"+filename);
+			if (down.exists()){
+				Intent intent = new Intent(Intent.ACTION_VIEW);
+				intent.setDataAndType(Uri.fromFile(down), "application/vnd.android.package-archive");
+				intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+				Notification notification1 = new Notification(R.drawable.icon, "App Installed", System.currentTimeMillis());
+				notification1.flags = Notification.FLAG_AUTO_CANCEL;
+				PendingIntent contentIntent = PendingIntent.getActivity(this, 1014, intent, 0);
+				notification1.setLatestEventInfo(this, "App Installed", "Tap to install", contentIntent);
+				manager.notify(1014, notification1);
+			}else{
+				displayNotification(1013,"App Not Downloaded","Unsuccessful");
+			}
 		}
+
 		stopSelf();
 	}
-	public void displayNotification(String msg)
-	{
-		
+	public void displayNotification(int id, String ticker, String msg){
+		NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		Notification notification1 = new Notification(R.drawable.icon, ticker, System.currentTimeMillis());
+		notification1.flags = Notification.FLAG_AUTO_CANCEL;
+		PendingIntent contentIntent = PendingIntent.getActivity(this, id, new Intent(this, LocalService.class), 0);
+		notification1.setLatestEventInfo(this, ticker, msg, contentIntent);
+		manager.notify(id, notification1);
 	}
+
 }
